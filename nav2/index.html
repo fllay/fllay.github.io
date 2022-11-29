@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="you" /><link rel="canonical" href="https://fllay.github.io/nav2/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Nav2 - eru</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Nav2";
+        var mkdocs_page_input_path = "nav2.md";
+        var mkdocs_page_url = "/nav2/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/languages/yaml.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> eru
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">About</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Nav2</a>
+    <ul class="current">
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">eru</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Nav2</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <p>Welcome to the ros2Nav wiki!</p>
+<p><a href="https://www.seeedstudio.com/RPLiDAR-A3M1-360-Degree-Laser-Scanner-Kit-25M-Range.html?queryID=70e44489656c17974834429c4c542bb5&amp;objectID=118&amp;indexName=bazaar_retailer_products">RPLiDAR A3M1 </a></p>
+<h1 id="base-controller">Base controller</h1>
+<p>Microros agent to communicate with OpenCR</p>
+<pre><code>ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0  -v6
+</code></pre>
+<p>ekf.yaml</p>
+<pre><code class="language-yaml">EKFekf_filter_node:
+    ros__parameters:
+        frequency: 30.0
+        two_d_mode: true
+        publish_tf: true
+
+        map_frame: map
+        odom_frame: odom
+        base_link_frame: base_footprint
+        world_frame: odom
+
+        #x     , y     , z,
+        #roll  , pitch , yaw,
+        #vx    , vy    , vz,
+        #vroll , vpitch, vyaw,
+        #ax    , ay    , az
+        odom0: odom/unfiltered
+        odom0_config: [false, false, false,
+                        false, false, false,
+                        true,  true,  false,
+                        false, false, true,
+                        false, false, false]
+
+        odom0_differential: true
+        odom0_relative: false
+
+        imu0: imu/data
+
+        imu0_config: [false, false, false,
+                      false, false, true,
+                      false, false, false,
+                      false, false, true,
+                      false, false, false]
+
+        imu0_differential: false
+        imu0_relative: true
+        imu0_queue_size: 2
+
+</code></pre>
+<p>Check topic publishing rate</p>
+<pre><code>pi@pi-desktop:~$ ros2 topic hz /odom/unfiltered
+average rate: 48.074
+    min: 0.019s max: 0.025s std dev: 0.00124s window: 50
+average rate: 48.147
+    min: 0.019s max: 0.025s std dev: 0.00117s window: 99
+average rate: 48.082
+    min: 0.019s max: 0.025s std dev: 0.00111s window: 147
+</code></pre>
+<h1 id="bring-up">Bring up</h1>
+<ul>
+<li>install IMU : witmotion : witmotion package </li>
+<li>install movebase controller: openCR : microros agent and microros Arduino</li>
+<li>intall EKF robot localization: --- : sudo apt install ros-humble-robot-localization</li>
+</ul>
+<p>bringup.py</p>
+<pre><code class="language-python">from launch import LaunchDescription
+from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
+import os
+
+def generate_launch_description():
+    config_witmotion = os.path.join(get_package_share_directory('witmotion_ros'),'config', 'wt61c.yml')
+    ekf_config_path = '/home/pi/amr_config/ekf.yaml'
+    return LaunchDescription([
+        Node(
+            package='micro_ros_agent',
+            executable='micro_ros_agent',
+            name='micro_ros_agent',
+            arguments=[&quot;serial&quot;, &quot;--dev&quot;, &quot;/dev/ttyACM0&quot;, &quot;-v6&quot;]
+        ),
+        Node(
+            package = 'witmotion_ros',
+            executable = 'witmotion_ros_node',
+            parameters = [config_witmotion]
+        ),
+        Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[
+                ekf_config_path
+            ],
+            remappings=[(&quot;odometry/filtered&quot;, &quot;odom&quot;)]
+        ),
+    ])
+
+</code></pre>
+<h1 id="tf">TF</h1>
+<p><img alt="" src="https://github.com/fllay/ros2Nav/blob/main/pix/tf2.png?raw=true" /></p>
+<p><code>eru.urdf</code></p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; ?&gt;
+&lt;robot name=&quot;turtlebot3_burger&quot; xmlns:xacro=&quot;http://ros.org/wiki/xacro&quot;&gt;
+  &lt;link name=&quot;base_footprint&quot;/&gt;
+
+  &lt;joint name=&quot;base_joint&quot; type=&quot;fixed&quot;&gt;
+    &lt;parent link=&quot;base_footprint&quot;/&gt;
+    &lt;child link=&quot;base_link&quot;/&gt;
+    &lt;origin xyz=&quot;0.0 0.0 0.020&quot; rpy=&quot;0 0 0&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;base_link&quot;&gt;
+  &lt;/link&gt;
+
+  &lt;joint name=&quot;imu_joint&quot; type=&quot;fixed&quot;&gt;
+    &lt;parent link=&quot;base_link&quot;/&gt;
+    &lt;child link=&quot;imu_link&quot;/&gt;
+    &lt;origin xyz=&quot;-0.007 0 0.05&quot; rpy=&quot;0 0 0&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;imu_link&quot;/&gt;
+
+  &lt;joint name=&quot;scan_joint&quot; type=&quot;fixed&quot;&gt;
+    &lt;parent link=&quot;base_link&quot;/&gt;
+    &lt;child link=&quot;base_scan&quot;/&gt;
+    &lt;origin xyz=&quot;-0.04 0 0.095&quot; rpy=&quot;0 0 0&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;base_scan&quot;&gt;
+  &lt;/link&gt;
+
+  &lt;joint name=&quot;wheel_left_joint&quot; type=&quot;continuous&quot;&gt;
+    &lt;parent link=&quot;base_link&quot;/&gt;
+    &lt;child link=&quot;wheel_left_link&quot;/&gt;
+    &lt;origin xyz=&quot;0.0 0.08 0.023&quot; rpy=&quot;-1.57 0 0&quot;/&gt;
+    &lt;axis xyz=&quot;0 0 1&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;wheel_left_link&quot;&gt;
+  &lt;/link&gt;
+
+  &lt;joint name=&quot;wheel_right_joint&quot; type=&quot;continuous&quot;&gt;
+    &lt;parent link=&quot;base_link&quot;/&gt;
+    &lt;child link=&quot;wheel_right_link&quot;/&gt;
+    &lt;origin xyz=&quot;0.0 -0.080 0.023&quot; rpy=&quot;-1.57 0 0&quot;/&gt;
+    &lt;axis xyz=&quot;0 0 1&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;wheel_right_link&quot;&gt;
+  &lt;/link&gt;
+
+  &lt;joint name=&quot;caster_back_joint&quot; type=&quot;fixed&quot;&gt;
+    &lt;parent link=&quot;base_link&quot;/&gt;
+    &lt;child link=&quot;caster_back_link&quot;/&gt;
+    &lt;origin xyz=&quot;-0.081 0 -0.004&quot; rpy=&quot;-1.57 0 0&quot;/&gt;
+  &lt;/joint&gt;
+
+  &lt;link name=&quot;caster_back_link&quot;&gt;
+  &lt;/link&gt;
+&lt;/robot&gt;
+</code></pre>
+<p>Static TF publisher launch file</p>
+<pre><code class="language-python">#!/usr/bin/env python3
+#
+# Copyright 2019 ROBOTIS CO., LTD.
+#
+# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Authors: Darby Lim
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    urdf = '/home/pi/amr_config/eru.urdf'
+
+    # Major refactor of the robot_state_publisher
+    # Reference page: https://github.com/ros2/demos/pull/426
+    with open(urdf, 'r') as infp:
+        robot_desc = infp.read()
+
+    rsp_params = {'robot_description': robot_desc}
+
+    # print (robot_desc) # Printing urdf information.
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            output='screen',
+            parameters=[rsp_params, {'use_sim_time': use_sim_time}])
+    ])
+
+</code></pre>
+<p>Start publish static TF</p>
+<pre><code>pi@pi-desktop:~$ ros2 launch state_publisher.py
+</code></pre>
+<h1 id="slam">SLAM</h1>
+<p>package: <code>slam_toolbox</code></p>
+<p>launch file: <code>online_async_launch.py</code></p>
+<p>parameters:  </p>
+<pre><code>'use_sim_time': LaunchConfiguration(&quot;sim&quot;),
+slam_param_name: slam_config_path
+</code></pre>
+<p>Installation</p>
+<pre><code>sudo apt install ros-humble-slam-toolbox
+</code></pre>
+<p>Save a map file</p>
+<pre><code>cd linorobot2/linorobot2_navigation/maps
+ros2 run nav2_map_server map_saver_cli -f &lt;map_name&gt; --ros-args -p save_map_timeout:=10000.
+</code></pre>
+<pre><code class="language-python"># Copyright (c) 2021 Juan Miguel Jimeno
+#
+# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+from launch import LaunchDescription
+from launch import LaunchContext
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.conditions import IfCondition
+from launch.substitutions import EnvironmentVariable
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    slam_launch_path = PathJoinSubstitution(
+        [FindPackageShare('slam_toolbox'), 'launch', 'online_async_launch.py']
+    )
+
+    slam_config_path = PathJoinSubstitution(
+        [FindPackageShare('linorobot2_navigation'), 'config', 'slam.yaml']
+    )
+
+    rviz_config_path = PathJoinSubstitution(
+        [FindPackageShare('linorobot2_navigation'), 'rviz', 'linorobot2_slam.rviz']
+    )
+
+    lc = LaunchContext()
+    ros_distro = EnvironmentVariable('ROS_DISTRO')
+    slam_param_name = 'slam_params_file'
+    if ros_distro.perform(lc) == 'foxy': 
+        slam_param_name = 'params_file'
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            name='sim', 
+            default_value='false',
+            description='Enable use_sime_time to true'
+        ),
+
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(slam_launch_path),
+            launch_arguments={
+                'use_sim_time': LaunchConfiguration(&quot;sim&quot;),
+                 slam_param_name: slam_config_path
+            }.items()
+        ),
+
+
+    ])
+</code></pre>
+<h1 id="navigation">Navigation</h1>
+<p>package: <code>nav2_bringup</code></p>
+<p>launch file: <code>bringup_launch.py</code></p>
+<p>parameters:  </p>
+<pre><code>map: LaunchConfiguration(&quot;map&quot;),
+use_sim_time': LaunchConfiguration(&quot;sim&quot;),
+params_file': nav2_config_path
+</code></pre>
+<p>launch file snippet:</p>
+<pre><code class="language-python"># Copyright (c) 2021 Juan Miguel Jimeno
+#
+# Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.conditions import IfCondition
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
+
+
+
+def generate_launch_description():
+
+
+    nav2_launch_path = PathJoinSubstitution(
+        [FindPackageShare('nav2_bringup'), 'launch', 'bringup_launch.py']
+    )
+
+
+
+    #default_map_path = '/home/pi/amr_config/maps/myOfficeDesk.yaml'
+    default_map_path = '/home/pi/amr_config/maps/house1.yaml'
+    nav2_config_path = '/home/pi/amr_config/navigation.yaml'
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            name='sim', 
+            default_value='false',
+            description='Enable use_sime_time to true'
+        ),
+
+
+
+       DeclareLaunchArgument(
+            name='map', 
+            default_value=default_map_path,
+            description='Navigation map path'
+        ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(nav2_launch_path),
+            launch_arguments={
+                'map': LaunchConfiguration(&quot;map&quot;),
+                'use_sim_time': LaunchConfiguration(&quot;sim&quot;),
+                'params_file': nav2_config_path
+            }.items()
+        )
+    ])
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="About"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
